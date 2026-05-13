@@ -33,11 +33,11 @@ function trysetupshortcut {
             $Shortcut = $WScriptShell.CreateShortcut($ShortcutFile)
             $Shortcut.TargetPath = $TargetFile
             $Shortcut.Arguments = "..\main.lua"
+            $Shortcut.WorkingDirectory = $binpath
             $Shortcut.Save()
             if (!(Test-Path -Path $luamain)) {
             New-Item -Path $luamain -ItemType File -Value @"
 print("Hello World!")
-
 io.read()
 "@
 }
