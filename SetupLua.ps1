@@ -1,3 +1,4 @@
+# Configuração de links e caminhos para criar as pastas e baixar o arquivo correto
 $lualink = "https://sourceforge.net/projects/luabinaries/files/5.5.0/Tools%20Executables/lua-5.5.0_Win64_bin.zip/download"
 $rt = $PSScriptRoot
 $runluapath = "$rt\lua\run.lnk"
@@ -8,7 +9,24 @@ $binpath ="$rt\lua\bin"
 $wluapath = "$binpath\wlua55.exe"
 $luapath = "$binpath\lua55.exe"
 $zippath = "$binpath\lua-5.5.0_Win64_bin.zip"
+
+# As funcões abaixo são feitas por tentativas:
+
+# Ele tenta executar, se não é possivel, ele não executa e pula 
+# para a proxima função sem mandar mensagem.
+
+# Se é possivel ele tenta e imprime resultado
+
+# As funções retornam:
+# 0 - erro
+# 1 - ir para o proximo
+# 2 - terminado com sucesso
+
+
+# Tenta criar atalhos
 function trysetupshortcut {
+
+    # Tenta criar atalho para wlua (lua sem o terminal)
     if ((Test-Path -Path $wluapath) -and !(Test-Path -Path $runluawconsole)) {
         try {
             Write-Host "Criando atalho para wlua"
@@ -24,6 +42,7 @@ function trysetupshortcut {
         }
     }
     
+    # Tenta criar atalho para lua rodar o arquivo main.lua
     if ((Test-Path -Path $luapath) -and !(Test-Path -Path $runluamain)) {
         try {
             Write-Host "Criando atalho para main.lua"
@@ -47,6 +66,7 @@ io.read()
         }
     }
 
+    # Tenta criar atalho para lua (com o terminal)
     if ((Test-Path -Path $luapath) -and !(Test-Path -Path $runluapath)) {
     
         try {
@@ -67,7 +87,10 @@ io.read()
     }
     return 1
 }
+
+# Tenta descompactar arquivos
 function tryunziplua {
+    # Se tem arquivo e não está descompactado: descompacte
     if ((Test-Path -Path $zippath) -and !(Test-Path -Path $luapath)) {
         Write-Host "Descompactando arquivos"
     } else {
@@ -84,10 +107,14 @@ function tryunziplua {
     return 1
 
 }
+
+# Tenta baixar lua
 function downloadlua {
+    # Se o lua já foi baixado, pule
     if (Test-Path -Path $zippath) {
         return 1
     }
+    # Senão tenta baixar
     Write-Host "Tentando baixar lua"
     if (!(
         Test-Path -Path "$rt\lua"
@@ -115,28 +142,36 @@ function downloadlua {
     return 1
 }
 
+# Função principal
 function main {
     Clear-Host
 
     $err = $false
 
+    # Tenta 10 vezes executar as funções em ordem reversa
+    # Tenta criar atalhos, depois descompactar, depois baixar
     foreach ($i in 1..10) {
+
         $result = trysetupshortcut
+        # Se tiver sucesso termina o loop
         if ($result -eq 2) {
             break
         }
+        # Se tiver erro termina o loop com erro
         if ($result -eq 0) {
             $err = $true
             break
         } 
 
         $result = tryunziplua
+        # Se tiver erro termina o loop com erro
         if ($result -eq 0) {
             $err = $true
             break
         } 
         
         $result = downloadlua
+        # Se tiver erro termina o loop com erro
         if ($result -eq 0) {
             $err = $true
             break
@@ -147,7 +182,10 @@ function main {
     } else {
         Write-Host "Programa finalizado com sucesso"
     }
+    # Aguarda input para fechar, senão o programa fecharia
+    # antes do usuário conseguir ler as mensagens
     Read-Host
 }
 
+# Roda o programa
 main
